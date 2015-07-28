@@ -41,10 +41,10 @@ for url in urls:
     with open('fetched_data_col.txt',mode='a',encoding="utf-8") as f:
         f.write("\n\n" + "#"*10 + "\nData from URL: " + url + "#"*10)
         for o_list in soup.findAll('div', {'class' : 'o_list'}):
-            for org_name in o_list.findAll('div', {'class': 'four columns'}):
+            for org_name in o_list.findAll('div', {'class': 'four columns'}):#this will fetch the first and third columns
                 print(org_name.text.encode('utf-8'))
                 f.write(org_name.text + " ||| ")
-            for org_address in o_list.findAll('div', {'class': 'two columns'}):
+            for org_address in o_list.findAll('div', {'class': 'two columns'}):#and now fetching the second column
                 print(org_address.text.encode('utf-8'))
                 f.write(org_address.text + " ||| ")
             f.write("\n")
