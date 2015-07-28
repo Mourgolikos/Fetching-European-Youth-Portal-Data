@@ -10,7 +10,7 @@ for i in range(1,pages):#next urls
 
 
 with open('fetched_data.csv',mode='w',encoding="utf-8") as f:#write the first line in the csv
-    firstLineValuesNames = "Name of the Organization,EVS/PIC No.,Field,City,County,Website"
+    firstLineValuesNames = "Name of the Organization|EVS/PIC No.|Field|City|County|Website"#csv delimiter="|"
     f.write(firstLineValuesNames + '\n')#write the first line
 
 
