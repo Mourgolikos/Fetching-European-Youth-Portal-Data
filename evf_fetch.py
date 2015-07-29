@@ -15,7 +15,7 @@ for i in range(1,pages):#next urls
 
 #Write the first line in the csv
 with open('fetched_data.csv',mode='w',encoding="utf-8") as f:
-    firstLineValuesNames = "Name|Address|Postal Code|City|Country|EVS accreditation type|Website|Email|Phone|Fax|EVS No.|PIC No.|Organisation topics"#csv delimiter="|"
+    firstLineValuesNames = "Organisation Name|Address|Postal Code|City|Country|EVS accreditation type|Website|Email|Phone|Fax|EVS No.|PIC No.|Organisation topics|EVF URL"#csv delimiter="|"
     f.write(firstLineValuesNames + '\n')#write the first line
 
 
@@ -99,6 +99,7 @@ def getUrlData(url):
     dataDict['EVS No.']                 = ''
     dataDict['PIC No.']                 = ''
     dataDict['Organisation topics']     = ''#completed in followed url
+    dataDict['EVF URL']                 = ''
 
 
     print('fetching data for url: ' + url)
@@ -115,8 +116,9 @@ def getUrlData(url):
 
         org_name = o_list.find('div', {'class': 'org_name'})#get the organisation's name
         urlToFollow = r'https://europa.eu' + org_name.find('a')['href']#get the href attribute
+        dataDict['EVF URL'] = urlToFollow
 
-        # the following line will rewrite the dataDict with the data from the followe url
+        # the following line will rewrite the dataDict with the data from the followed url
         dataDict = getFullowedUrlData(furl=urlToFollow, dataDict_passed=dataDict)
 
         # now fetch the remaining data values from the original parent-page
@@ -124,9 +126,9 @@ def getUrlData(url):
         for divElement in two_columns.findAll('div'):#iter through the above divs
             elementText =  getText(divElement)
             if 'EVS no:' in elementText:
-                dataDict['EVS No.'] = elementText
+                dataDict['EVS No.'] = elementText.replace('EVS no: ', '')
             elif 'PIC no:' in elementText:
-                dataDict['PIC No.'] = elementText
+                dataDict['PIC No.'] = elementText.replace('PIC no: ', '')
             elif 'EVS accredited' not in elementText:
                 dataDict['EVS accreditation type'] = elementText.replace(", ", "/")
 
@@ -145,10 +147,10 @@ linesToWrite = []
 ###########
 
 #make the Pool of workers
-pool = ThreadPool(4)#Four threads are ok for url requests.
+pool = ThreadPool(16)#Sixteen threads are ok for url requests.
 
 #open the urls in their own threads and return the results
-results = pool.map(getUrlData, urls)
+results = pool.map(getUrlData, urls[:1])
 
 for result in results:#for each poll group extend the linesToWrite
     linesToWrite.extend(result)
