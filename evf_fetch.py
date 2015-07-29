@@ -2,7 +2,8 @@
 __author__ = 'Paschaleris Triantafyllos'
 from multiprocessing.dummy import Pool as ThreadPool
 from bs4 import BeautifulSoup
-import urllib.request
+import urllib.request, urllib.error
+import errno
 from collections import OrderedDict
 
 
@@ -31,14 +32,21 @@ def trimWhiteSpacesBeforeAfterDelimiter(stringg,delimiter):
     return stringg.replace(' ' + delimiter, '|').replace(delimiter + ' ', '|')
 
 
-
 def getFullowedUrlData(furl,dataDict_passed):
     print('fetching data for followed url: ' + furl)
-    req = urllib.request.Request(furl)
-    resp = urllib.request.urlopen(req)
-    respData = resp.read()
-    soup = BeautifulSoup(respData,from_encoding='utf-8')
+    respData = ''#Init here respData in order to make it global inside this scope(function)
+    for i in range(10):#Ten retries to get the html from url
+        try:
+            req = urllib.request.Request(furl)
+            resp = urllib.request.urlopen(req, timeout=69)
+            respData = resp.read()
+        except urllib.error.URLError as e:#some error handling
+            if e.reason.errno == errno.EINPROGRESS:
+                print("RETRYING. Error in url: " + furl)#debugging
+                continue
+            raise
 
+    soup = BeautifulSoup(respData,from_encoding='utf-8')
 
     dataDict = dataDict_passed#some renaming matching to the parent function's Dictionary naming
 
@@ -103,9 +111,18 @@ def getUrlData(url):
 
 
     print('fetching data for url: ' + url)
-    req = urllib.request.Request(url)
-    resp = urllib.request.urlopen(req)
-    respData = resp.read()
+    respData = ''#Init here respData in order to make it global inside this scope(function)
+    for i in range(10):#Ten retries to get the html from url
+        try:
+            req = urllib.request.Request(url)
+            resp = urllib.request.urlopen(req, timeout=69)
+            respData = resp.read()
+        except urllib.error.URLError as e:#some error handling
+            if e.reason.errno == errno.EINPROGRESS:
+                print("RETRYING. Error in followed url: " + url)#debugging
+                continue
+            raise
+
     soup = BeautifulSoup(respData,from_encoding='utf-8')
 
 
