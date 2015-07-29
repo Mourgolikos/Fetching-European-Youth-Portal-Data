@@ -37,9 +37,11 @@ def getFullowedUrlData(furl,dataDict_passed):
     respData = ''#Init here respData in order to make it global inside this scope(function)
     for i in range(10):#Ten retries to get the html from url
         try:
-            req = urllib.request.Request(furl)
+            req = urllib.request.Request(furl,headers={'cache-control': 'no-cache',
+                                                       'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
             resp = urllib.request.urlopen(req, timeout=69)
             respData = resp.read()
+            resp.close()
         except urllib.error.URLError as e:#some error handling
             if e.reason.errno == errno.EINPROGRESS:
                 print("RETRYING. Error in url: " + furl)#debugging
@@ -114,9 +116,11 @@ def getUrlData(url):
     respData = ''#Init here respData in order to make it global inside this scope(function)
     for i in range(10):#Ten retries to get the html from url
         try:
-            req = urllib.request.Request(url)
+            req = urllib.request.Request(url,headers={'cache-control': 'no-cache',
+                                                       'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
             resp = urllib.request.urlopen(req, timeout=69)
             respData = resp.read()
+            resp.close()
         except urllib.error.URLError as e:#some error handling
             if e.reason.errno == errno.EINPROGRESS:
                 print("RETRYING. Error in followed url: " + url)#debugging
