@@ -150,7 +150,7 @@ linesToWrite = []
 pool = ThreadPool(16)#Sixteen threads are ok for url requests.
 
 #open the urls in their own threads and return the results
-results = pool.map(getUrlData, urls[:1])
+results = pool.map(getUrlData, urls)
 
 for result in results:#for each poll group extend the linesToWrite
     linesToWrite.extend(result)
