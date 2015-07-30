@@ -51,8 +51,11 @@ def getFullowedUrlData(furl,dataDict_passed):
             print("RETRYING... the url: " + furl)#debugging
             time.sleep(10) # delays for 10 seconds
             continue
+        else:
+            break#success!
     else:
-        quit()#the script failed so quit
+        print("Script failed... exiting...")
+        quit()#the script failed, so quit
 
 
     soup = BeautifulSoup(respData,from_encoding='utf-8')
@@ -120,8 +123,11 @@ def getUrlData(url):
             print("RETRYING... the url: " + url)#debugging
             time.sleep(10) # delays for 10 seconds
             continue
+        else:
+            break#success!
     else:
-        quit()#the script failed so quit
+        print("Script failed... exiting...")
+        quit()#the script failed, so quit
 
 
     soup = BeautifulSoup(respData,from_encoding='utf-8')
