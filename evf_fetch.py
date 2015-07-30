@@ -16,7 +16,7 @@ for i in range(1,pages):#next urls
 
 #Write the first line in the csv
 with open('fetched_data.csv',mode='w',encoding="utf-8") as f:
-    firstLineValuesNames = "Organisation Name|Address|Postal Code|City|Country|EVS accreditation type|Website|Email|Phone|Fax|EVS No.|PIC No.|Organisation topics|EVF URL"#csv delimiter="|"
+    firstLineValuesNames = "Organisation Name|Address|Postal Code|City|Country|EVS accreditation type|Website|Email|Phone|Fax|EVS No.|PIC No.|EVS No./PIC No.|Organisation topics|EVF URL"#csv delimiter="|"
     f.write(firstLineValuesNames + '\n')#write the first line
 
 
@@ -94,24 +94,6 @@ def getFullowedUrlData(furl,dataDict_passed):
 # The main Function fetching the data from given URL
 def getUrlData(url):
 
-    #Setup the dictionary that will hold the data
-    dataDict = OrderedDict()#...because the order is important
-    dataDict['Name']                    = ''#completed in followed url
-    dataDict['Address']                 = ''#completed in followed url
-    dataDict['Postal Code']             = ''#completed in followed url
-    dataDict['City']                    = ''#completed in followed url
-    dataDict['Country']                 = ''#completed in followed url
-    dataDict['EVS accreditation type']  = ''
-    dataDict['Website']                 = ''#completed in followed url
-    dataDict['Email']                   = ''#completed in followed url
-    dataDict['Phone']                   = ''#completed in followed url
-    dataDict['Fax']                     = ''#completed in followed url
-    dataDict['EVS No.']                 = ''
-    dataDict['PIC No.']                 = ''
-    dataDict['Organisation topics']     = ''#completed in followed url
-    dataDict['EVF URL']                 = ''
-
-
     print('fetching data for url: ' + url)
     respData = ''#Init here respData in order to make it global inside this scope(function)
     for i in range(10):#Ten retries to get the html from url
@@ -135,6 +117,26 @@ def getUrlData(url):
 
     for o_list in soup.findAll('div', {'class' : 'o_list'}):
 
+
+        #Setup the dictionary that will hold the data
+        dataDict = OrderedDict()#...because the order is important
+        dataDict['Name']                    = ''#completed in followed url
+        dataDict['Address']                 = ''#completed in followed url
+        dataDict['Postal Code']             = ''#completed in followed url
+        dataDict['City']                    = ''#completed in followed url
+        dataDict['Country']                 = ''#completed in followed url
+        dataDict['EVS accreditation type']  = ''
+        dataDict['Website']                 = ''#completed in followed url
+        dataDict['Email']                   = ''#completed in followed url
+        dataDict['Phone']                   = ''#completed in followed url
+        dataDict['Fax']                     = ''#completed in followed url
+        dataDict['EVS No.']                 = ''
+        dataDict['PIC No.']                 = ''
+        dataDict['EVS No./PIC No.']         = ''#joined from above EVS No. and PIC No.
+        dataDict['Organisation topics']     = ''#completed in followed url
+        dataDict['EVF URL']                 = ''
+
+
         org_name = o_list.find('div', {'class': 'org_name'})#get the organisation's name
         urlToFollow = r'https://europa.eu' + org_name.find('a')['href']#get the href attribute
         dataDict['EVF URL'] = urlToFollow
@@ -152,6 +154,7 @@ def getUrlData(url):
                 dataDict['PIC No.'] = elementText.replace('PIC no: ', '')
             elif 'EVS accredited' not in elementText:
                 dataDict['EVS accreditation type'] = elementText.replace(", ", "/")
+        dataDict['EVS No./PIC No.'] = '/'.join([dataDict['EVS No.'],dataDict['PIC No.']])#merging the EVS and PIC in one column (as requested)
 
 
         lineToWrite = '|'.join(list(dataDict.values()))
