@@ -175,7 +175,7 @@ def getUrlData(url):
                 dataDict['PIC No.'] = elementText.replace('PIC no: ', '')
             elif 'EVS accredited' not in elementText:
                 dataDict['EVS accreditation type'] = elementText.replace(", ", "/")
-        dataDict['EVS No./PIC No.'] = '/'.join([dataDict['EVS No.'],dataDict['PIC No.']])#merging the EVS and PIC in one column (as requested)
+        dataDict['EVS No./PIC No.'] = '/'.join(filter(None, [dataDict['EVS No.'],dataDict['PIC No.']]))#merging the EVS and PIC in one column (as requested), filtering out falsy elements.
 
 
         lineToWrite = '|'.join(list(dataDict.values()))
@@ -193,7 +193,7 @@ linesToWrite = []
 ###########
 
 #make the Pool of workers
-pool = ThreadPool(16)#Sixteen threads are ok for url requests.
+pool = ThreadPool(17)#Seventeen threads are ok for url requests.
 
 #open the urls in their own threads and return the results
 results = pool.map(getUrlData, urls)
