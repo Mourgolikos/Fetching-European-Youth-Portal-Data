@@ -2,8 +2,7 @@
 __author__ = 'Paschaleris Triantafyllos'
 from multiprocessing.dummy import Pool as ThreadPool
 from bs4 import BeautifulSoup
-import urllib.request, urllib.error
-import errno
+import time,urllib.request, urllib.error
 from collections import OrderedDict
 
 
@@ -21,7 +20,6 @@ with open('fetched_data.csv',mode='w',encoding="utf-8") as f:
 
 
 
-
 def getText(element):#In order to get the inner Text from the given element. Returns empty string if the element is None
     if element:
         return element.text
@@ -32,21 +30,30 @@ def trimWhiteSpacesBeforeAfterDelimiter(stringg,delimiter):
     return stringg.replace(' ' + delimiter, '|').replace(delimiter + ' ', '|')
 
 
+
 def getFullowedUrlData(furl,dataDict_passed):
     print('fetching data for followed url: ' + furl)
     respData = ''#Init here respData in order to make it global inside this scope(function)
-    for i in range(10):#Ten retries to get the html from url
+    for i in range(20):#Ten retries to get the html from url
         try:
             req = urllib.request.Request(furl,headers={'cache-control': 'no-cache',
                                                        'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
             resp = urllib.request.urlopen(req, timeout=88)
             respData = resp.read()
             resp.close()
-        except urllib.error.URLError as e:#some error handling
-            if e.reason.errno == errno.EINPROGRESS:
-                print("RETRYING. Error in url: " + furl)#debugging
-                continue
-            raise
+        except urllib.error.HTTPError as errorHTTP:
+            print('ERROR: ' + str(errorHTTP.code))#debugging
+            print("RETRYING... the url: " + furl)#debugging
+            time.sleep(6) # delays for 6 seconds
+            continue
+        except urllib.error.URLError as errorURL:#some error handling
+            print('ERROR: ' + str(errorURL.args))#debugging
+            print("RETRYING... the url: " + furl)#debugging
+            time.sleep(10) # delays for 10 seconds
+            continue
+    else:
+        quit()#the script failed so quit
+
 
     soup = BeautifulSoup(respData,from_encoding='utf-8')
 
@@ -59,7 +66,6 @@ def getFullowedUrlData(furl,dataDict_passed):
         block1circle = block1.find('ul', {'class' : 'circle'})
         if block1circle:#checking if NoneType
             dataDict['Organisation topics']  = ' & '.join([elem.text for elem in block1circle.findAll('li')])#reading the data about Organisation's Type and Field (this order)
-
 
 
     block2 = topics.find('div', {'class' : 'block2'})
@@ -81,33 +87,42 @@ def getFullowedUrlData(furl,dataDict_passed):
             dataDict['Postal Code'] = getText(divElem)
         elif row == 3:
             splitted = getText(divElem).split(',')#they are separated by ',' e.g.: "City, Country"
-            if len(splitted)>1:#sometimes City is not provided!
+            if len(splitted)==2:
                 dataDict['City'] = splitted[0]
                 dataDict['Country'] = splitted[1]
-            else:
+            elif len(splitted)>2:#sometimes City is not provided!
+                dataDict['Country'] = splitted[-1]#The Country is the last one
+                dataDict['City'] = ','.join(splitted[:-1])#The others are just City and Province (?), excluding the last one (it's the country!)
+            else:#sometimes City is not provided!
                 dataDict['Country'] = splitted[0]
 
     return dataDict
 
 
-
 # The main Function fetching the data from given URL
 def getUrlData(url):
-
     print('fetching data for url: ' + url)
     respData = ''#Init here respData in order to make it global inside this scope(function)
-    for i in range(10):#Ten retries to get the html from url
+    for i in range(20):#Ten retries to get the html from url
         try:
-            req = urllib.request.Request(url,headers={'cache-control': 'no-cache',
-                                                       'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.5) Gecko/20091102 Firefox/3.5.5'})
+            req = urllib.request.Request(url,headers={'Cache-Control': 'max-age=0',
+                                                       'User-agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1'})
             resp = urllib.request.urlopen(req, timeout=88)
             respData = resp.read()
             resp.close()
-        except urllib.error.URLError as e:#some error handling
-            if e.reason.errno == errno.EINPROGRESS:
-                print("RETRYING. Error in followed url: " + url)#debugging
-                continue
-            raise
+        except urllib.error.HTTPError as errorHTTP:
+            print('ERROR: ' + str(errorHTTP.code))#debugging
+            print("RETRYING... the url: " + url)#debugging
+            time.sleep(6) # delays for 6 seconds
+            continue
+        except urllib.error.URLError as errorURL:#some error handling
+            print('ERROR: ' + str(errorURL.args))#debugging
+            print("RETRYING... the url: " + url)#debugging
+            time.sleep(10) # delays for 10 seconds
+            continue
+    else:
+        quit()#the script failed so quit
+
 
     soup = BeautifulSoup(respData,from_encoding='utf-8')
 
@@ -116,7 +131,6 @@ def getUrlData(url):
 
 
     for o_list in soup.findAll('div', {'class' : 'o_list'}):
-
 
         #Setup the dictionary that will hold the data
         dataDict = OrderedDict()#...because the order is important
@@ -141,6 +155,7 @@ def getUrlData(url):
         urlToFollow = r'https://europa.eu' + org_name.find('a')['href']#get the href attribute
         dataDict['EVF URL'] = urlToFollow
 
+
         # the following line will rewrite the dataDict with the data from the followed url
         dataDict = getFullowedUrlData(furl=urlToFollow, dataDict_passed=dataDict)
 
@@ -160,6 +175,7 @@ def getUrlData(url):
         lineToWrite = '|'.join(list(dataDict.values()))
 
         pagedata.append(trimWhiteSpacesBeforeAfterDelimiter(stringg=lineToWrite, delimiter='|') + '\n')#Trim the excess spaces and add new line character in each line
+
     return pagedata
 
 
