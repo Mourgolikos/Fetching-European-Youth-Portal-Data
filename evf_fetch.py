@@ -2,20 +2,23 @@
 __author__ = 'Paschaleris Triantafyllos'
 from multiprocessing.dummy import Pool as ThreadPool
 from bs4 import BeautifulSoup
-import time,urllib.request, urllib.error
+import time, urllib.request, urllib.error
 from collections import OrderedDict
 
 
 #Construct the URLs List
 urls = ['https://europa.eu/youth/evs_database_en?country=&town=&name=&pic=&eiref=&field_eyp_vp_accreditation_type=All&topic=&inclusion_topic=']#first url
 pages = 228
-for i in range(1,pages):#next urls
+for i in range(1, pages):#next urls
     urls.append('https://europa.eu/youth/evs_database_en?country=&town=&name=&pic=&eiref=&field_eyp_vp_accreditation_type=All&topic=&inclusion_topic=&page='+str(i))
+
+
+delimiter = '|'
 
 
 #Write the first line in the csv
 with open('fetched_data.csv',mode='w',encoding="utf-8") as f:
-    firstLineValuesNames = "Organisation Name|Address|Postal Code|City|Country|EVS accreditation type|Website|Email|Phone|Fax|EVS No.|PIC No.|EVS No./PIC No.|Organisation topics|EVF URL"#csv delimiter="|"
+    firstLineValuesNames = delimiter.join(["Organisation Name","Address","Postal Code","City","Country","EVS accreditation type","Website","Email","Phone","Fax","EVS No.","PIC No.","EVS No./PIC No.","Organisation topics","EVF URL"])
     f.write(firstLineValuesNames + '\n')#write the first line
 
 
@@ -26,12 +29,12 @@ def getText(element):#In order to get the inner Text from the given element. Ret
     return ''
 
 
-def trimWhiteSpacesBeforeAfterDelimiter(stringg,delimiter):
-    return stringg.replace(' ' + delimiter, '|').replace(delimiter + ' ', '|')
+def trimWhiteSpacesBeforeAfterDelimiter(stringg, delimiterL=delimiter):
+    return stringg.replace(' ' + delimiterL, delimiterL).replace(delimiterL + ' ', delimiterL)
 
 
 
-def getFullowedUrlData(furl,dataDict_passed):
+def getFullowedUrlData(furl, dataDict_passed):
     print('fetching data for followed url: ' + furl)
     respData = ''#Init here respData in order to make it global inside this scope(function)
     for i in range(20):#Ten retries to get the html from url
@@ -58,7 +61,7 @@ def getFullowedUrlData(furl,dataDict_passed):
         quit()#the script failed, so quit
 
 
-    soup = BeautifulSoup(respData,from_encoding='utf-8')
+    soup = BeautifulSoup(respData, from_encoding='utf-8')
 
     dataDict = dataDict_passed#some renaming matching to the parent function's Dictionary naming
 
@@ -130,7 +133,7 @@ def getUrlData(url):
         quit()#the script failed, so quit
 
 
-    soup = BeautifulSoup(respData,from_encoding='utf-8')
+    soup = BeautifulSoup(respData, from_encoding='utf-8')
 
 
     pagedata = []#init the returned list that will hold the Dictionary for the
@@ -178,9 +181,9 @@ def getUrlData(url):
         dataDict['EVS No./PIC No.'] = '/'.join(filter(None, [dataDict['EVS No.'],dataDict['PIC No.']]))#merging the EVS and PIC in one column (as requested), filtering out falsy elements.
 
 
-        lineToWrite = '|'.join(list(dataDict.values()))
+        lineToWrite = delimiter.join(list(dataDict.values()))
 
-        pagedata.append(trimWhiteSpacesBeforeAfterDelimiter(stringg=lineToWrite, delimiter='|') + '\n')#Trim the excess spaces and add new line character in each line
+        pagedata.append(trimWhiteSpacesBeforeAfterDelimiter(stringg=lineToWrite) + '\n')#Trim the excess spaces and add new line character in each line
 
     return pagedata
 
@@ -207,5 +210,5 @@ pool.close()
 pool.join()
 
 
-with open('fetched_data.csv', mode='a', encoding='utf-8') as f:#start writing data to csv delimiter="|"
+with open('fetched_data.csv', mode='a', encoding='utf-8') as f:#start writing data to csv
     f.writelines(linesToWrite)
